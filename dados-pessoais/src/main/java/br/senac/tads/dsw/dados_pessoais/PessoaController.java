@@ -2,6 +2,7 @@ package br.senac.tads.dsw.dados_pessoais;
 
 import java.util.List;
 import java.util.Optional;
+import java.net.URI;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -9,10 +10,19 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
+
+import jakarta.validation.Valid;
+
 
 @RestController 
 @RequestMapping("/pessoas")
-public class PessoaController {
+public class PessoaController { 
     
     private final PessoaService pessoaService;
 
@@ -32,5 +42,31 @@ public class PessoaController {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND);
         }
         return optPessoa.get();
+    }
+
+    @PostMapping("/sem-validacao")
+    public ResponseEntity<?> incluirNovo(@RequestBody Pessoa pessoa) {
+        pessoaService.incluirNovaPessoa(pessoa);
+        URI location = ServletUriComponentsBuilder
+            .fromCurrentContextPath()
+            .path("/pessoas/{username}")
+            .buildAndExpand(pessoa.getUsername())
+            .toUri();
+        return ResponseEntity.created(location).build();
+    }
+
+    @PostMapping 
+    public ResponseEntity<?> incluirNovaComValidacao(@RequestBody @Valid Pessoa pessoa) {
+
+      /*@Valid ativa a validação das anotações definidas na classe Pessoa.
+        Se qualquer restrição for violada, o Spring retorna automaticamente 
+        HTTP 400 Bad Request descrevendo os campos inválidos — sem nenhum código adicional no controller */ 
+        pessoaService.incluirNovaPessoa(pessoa);
+        URI location = ServletUriComponentsBuilder
+            .fromCurrentContextPath()
+            .path("/pessoas/{username}")
+            .buildAndExpand(pessoa.getUsername())
+            .toUri();
+        return ResponseEntity.created(location).build();
     }
 }
