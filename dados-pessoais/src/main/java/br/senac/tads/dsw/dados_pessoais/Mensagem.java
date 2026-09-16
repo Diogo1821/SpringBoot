@@ -8,7 +8,7 @@ public class Mensagem {
         this.nome = nome;
         this.texto = texto;
     }
-
+    
      public String getNome() {
         return nome;
     }
