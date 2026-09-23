@@ -1,26 +1,26 @@
 package br.senac.tads.dsw.dados_pessoais.validacao;
 
+import br.senac.tads.dsw.dados_pessoais.PessoaDto;
 import org.springframework.stereotype.Component;
 
-import br.senac.tads.dsw.dados_pessoais.Pessoa;
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
 
-@Component 
-public class SenhasIguaisValidator 
-    implements ConstraintValidator<SenhasIguais, Pessoa> {
+@Component
+public class SenhasIguaisValidator
+    implements ConstraintValidator<SenhasIguais, PessoaDto> {
 
         private String mensagem;
-        
+
         @Override
         public void initialize(SenhasIguais annotation) {
             //Lê a mensagem configurada na anotação @SenhasIguais
             this.mensagem = annotation.message();
         }
 
-        @Override 
-        public boolean isValid(Pessoa pessoa, ConstraintValidatorContext context) {
-            boolean resultado = pessoa.getSenha() != null && pessoa.getSenha().equals(pessoa.getSenhaRepeticao());
+        @Override
+        public boolean isValid(PessoaDto pessoaDto, ConstraintValidatorContext context) {
+            boolean resultado = pessoaDto.getSenha() != null && pessoaDto.getSenha().equals(pessoaDto.getSenhaRepeticao());
 
             if (!resultado) {
                 //Associa o erro ao campo "senha" em vez de á classe toda

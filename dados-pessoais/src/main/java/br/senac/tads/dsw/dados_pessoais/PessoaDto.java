@@ -10,7 +10,7 @@ import java.time.LocalDate;
 import java.util.List;
 
 @SenhasIguais
-public class Pessoa {
+public class PessoaDto {
     private Integer id;
 
     @NotBlank(message = "O username é obrigatório!")
@@ -21,7 +21,7 @@ public class Pessoa {
     @Size(max = 100)
     private String nome;
 
-    @NotBlank 
+    @NotBlank
     @Size(max = 100)
     @Email
     private String email;
@@ -29,29 +29,29 @@ public class Pessoa {
     @Size(max = 20)
     private String telefone;
 
-    @NotNull 
-    @PastOrPresent 
+    @NotNull
+    @PastOrPresent
     private LocalDate dataNascimento;
     private String senha;
     private String senhaRepeticao;
     private List<String> conhecimentos;
 
-    
-    
+
+
     /*  Por que dois construtores?
-    O construtor sem parâmetros é exigido pelo 
+    O construtor sem parâmetros é exigido pelo
     pelo Jackson — biblioteca incluída automaticamente pelo
-    Spring Boot que converte objetos Java em JSON (serialização) e JSON em objetos Java 
+    Spring Boot que converte objetos Java em JSON (serialização) e JSON em objetos Java
     (desserialização).
     O construtor com 5 parâmetros facilita a criação dos dados pré-populados no service,
     sem precisar chamar cada setter individualmente */
 
     // Construtor "padrão" sem argumentos
-    public Pessoa() {
+    public PessoaDto() {
     }
 
     // Construtor que recebe todas as propriedades
-    public Pessoa(Integer id, String username, String nome, String email, String telefone, LocalDate dataNascimento) {
+    public PessoaDto(Integer id, String username, String nome, String email, String telefone, LocalDate dataNascimento) {
         this.id = id;
         this.username = username;
         this.nome = nome;
