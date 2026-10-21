@@ -8,6 +8,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
@@ -39,6 +40,12 @@ public class PessoaController {
         return pessoaService.obterPessoas();
     }
 
+    // GET /pessoas/busca?q=<termo>
+    @GetMapping("/busca")
+    public ResponseEntity<List<PessoaDto>> buscarPessoas(@RequestParam("q") String termo) {
+        return ResponseEntity.ok(pessoaService.buscarPessoas(termo));
+    }
+    
     @GetMapping("/{username}")
     public PessoaDto obterPessoa(@PathVariable("username") String username) {
         Optional<PessoaDto> optPessoa = pessoaService.obterPessoa(username);
@@ -76,7 +83,7 @@ public class PessoaController {
 
 	@PutMapping("/{username}")
 	public ResponseEntity<?> atualizar(@PathVariable("username") String username, @RequestBody @Valid PessoaAlteracaoDto pessoa) {
-		PessoaDto pessoaDtoAlterada = pessoaService.alteraPessoa(username, pessoa);
+		PessoaDto pessoaDtoAlterada = pessoaService.alterarPessoa(username, pessoa);
 		return ResponseEntity.ok().body(pessoaDtoAlterada);
 	}
 
