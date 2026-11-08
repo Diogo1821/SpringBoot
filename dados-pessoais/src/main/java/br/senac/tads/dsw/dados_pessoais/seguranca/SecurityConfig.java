@@ -3,6 +3,7 @@ package br.senac.tads.dsw.dados_pessoais.seguranca;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
@@ -10,18 +11,35 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.crypto.password.NoOpPasswordEncoder;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.HttpStatusEntryPoint;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 import java.util.List;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
+
 @Configuration
-@EnableWebSecurity
+@EnableWebSecurity 
+@EnableMethodSecurity
 public class SecurityConfig {
+    
+    // =================================================
+    // 1) ADICIONAR ESTE TRECHO NO CÓDIGO EXISTENTE
+    // PARA INJETAR jwtFilter NO SecurityConfig
+
+    private final JwtFilter jwtFilter;
+
+    public SecurityConfig(JwtFilter jwtFilter) {
+        this.jwtFilter = jwtFilter;
+    }
+
+    // =================================================
 
     // Define a cadeia de filtros HTTP que o Spring Security aplica em cada requisição.
     // A ordem das regras em authorizeHttpRequests importa: a primeira regra que casar é aplicada.
@@ -52,9 +70,40 @@ public class SecurityConfig {
                 // Swagger UI: público para facilitar testes
                 .requestMatchers("/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**")
                     .permitAll()
+
+                // =================================================
+                // 2) ADICIONAR ESTAS LINHAS NO CÓDIGO EXISTENTE
+                // /me e os endpoints de acesso exigem autenticação (cobertos por anyRequest)
+                .requestMatchers("/me").authenticated()
+                // Permitir acesso aos arquivos das telas - antecipando config da etapa 7.7
+                .requestMatchers("/*.html", "/*.css", "/*.js").permitAll()
+                // =================================================
+
+                // Adicionar dentro de authorizeHttpRequests, antes de .anyRequest().authenticated():
+                // Leitura de pessoas: público
+                .requestMatchers(HttpMethod.GET, "/pessoas", "/pessoas/**").permitAll()
+                // Escrita exige autenticação (o @PreAuthorize no controller exigirá ROLE_ADMIN)
+                .requestMatchers(HttpMethod.POST, "/pessoas", "/pessoas/**").authenticated()
+                .requestMatchers(HttpMethod.PUT, "/pessoas/**").authenticated()
+                .requestMatchers(HttpMethod.DELETE, "/pessoas/**").authenticated()
+
+                .requestMatchers("/error").permitAll()
+                
                 // Demais endpoints precisam de autenticação - MANTER SEMPRE COMO ÚLTIMA CONFIGURAÇÃO
                 .anyRequest().authenticated()
-            );
+            )
+
+            // Faz com que sem autenticação o Spring Security retorne 401 Unauthorized (em vez de redirecionar para uma página de login).
+            .exceptionHandling(ex -> ex
+            .authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)))
+
+            // =================================================
+            // 3) ADICIONAR ESTA LINHA NO CÓDIGO EXISTENTE
+            // Registra o JwtFilter ANTES do filtro padrão de autenticação por username/senha.
+            // Fluxo: JwtFilter extrai e valida o token → preenche o SecurityContextHolder
+            // → os demais filtros e regras de autorização enxergam o usuário autenticado.
+            .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
+            // =================================================
 
         return http.build();
     }
@@ -76,9 +125,8 @@ public class SecurityConfig {
     // ATENÇÃO: NoOpPasswordEncoder armazena senhas em TEXTO PURO.
     // Use APENAS para fins didáticos — será substituído por BCrypt na Etapa 7.
     @Bean
-    @SuppressWarnings("deprecation")
     public PasswordEncoder passwordEncoder() {
-        return NoOpPasswordEncoder.getInstance();
+        return new BCryptPasswordEncoder();
     }
 
     @Bean 

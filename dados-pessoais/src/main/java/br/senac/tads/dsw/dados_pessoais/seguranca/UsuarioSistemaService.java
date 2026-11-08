@@ -1,69 +1,49 @@
 package br.senac.tads.dsw.dados_pessoais.seguranca;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import br.senac.tads.dsw.dados_pessoais.entidade.RoleEntity;
+import br.senac.tads.dsw.dados_pessoais.entidade.UsuarioSistemaEntity;
+import br.senac.tads.dsw.dados_pessoais.repositorio.UsuarioSistemaRepository;
 
-import org.springframework.security.core.GrantedAuthority;
+import java.util.ArrayList;
+import java.util.List;
+
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-// Implementa UserDetailsService - interface que o  Spring Security usa para carregar um usuário
-// pelo username durante o processo de autenticação.
-// O método loadUserByUsername() é chamado automaticamente pelo AuthenticationManager.
 @Service
 public class UsuarioSistemaService implements UserDetailsService {
     
-    private final Map<String, UserDetails> usuarios;
+    // 1. Injeta o repositório no construtor (e remove o mapa em memória)
+    private final UsuarioSistemaRepository usuarioSistemaRepository;
 
-    // O PasswordEncoder é injetado pelo Spring Security para codificar as senhas na inicialização do serviço.
-    // Neste momento usamos NoOpPasswordEncoder (texto puro). Será trocado por BCrypt na Etapa 7.
-    public UsuarioSistemaService(PasswordEncoder passwordEncoder) {
-        usuarios = new HashMap<>();
-
-        // admin - acesso total: ROLE_ADMIN, ROLE_GERENTE e ROLE_USER
-        this.usuarios.put("admin", new UsuarioSistema(
-            "admin",
-            passwordEncoder.encode("Abcd%12345"), // senha codificada
-            List.of(
-                new SimpleGrantedAuthority("ROLE_ADMIN"),
-                new SimpleGrantedAuthority("ROLE_GERENTE"),
-                new SimpleGrantedAuthority("ROLE_USER")
-            )
-        ));
-
-        // user1 - acesso intermediário: ROLE_GERENTE e ROLE_USER
-        this.usuarios.put("user1", new UsuarioSistema(
-            "user1",
-            passwordEncoder.encode("Abcd%12345"), // senha codificada
-            List.of(
-                new SimpleGrantedAuthority("ROLE_GERENTE"),
-                new SimpleGrantedAuthority("ROLE_USER")
-            )
-        ));
-
-        // user2 - acesso básico: somente: ROLE_USER
-        this.usuarios.put("user2", new UsuarioSistema(
-            "user2",
-            passwordEncoder.encode("Abcd%12345"), // senha codificada
-            List.of(
-                new SimpleGrantedAuthority("ROLE_USER")
-            )
-        ));
+    public UsuarioSistemaService(UsuarioSistemaRepository usuarioSistemaRepository) {
+        this.usuarioSistemaRepository = usuarioSistemaRepository;
     }
 
     // Chamado pelo Spring Security quando precisa verificar as credenciais de um usuário.
-    // Em um sistema real, este método consultaria o banco de dados.
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        UserDetails usuario = usuarios.get(username);
-        if (usuario == null) {
-            throw new UsernameNotFoundException("Usuário não encontrado: " + username);
+        
+        // 2. Busca a entidade pelo username e lança exceção se não encontrar
+        UsuarioSistemaEntity entity = usuarioSistemaRepository.findByUsername(username)
+                .orElseThrow(() -> new UsernameNotFoundException("Usuário não encontrado: " + username));
+
+        // 3. lista de SimpleGrantedAuthority
+        List<SimpleGrantedAuthority> authorities = new ArrayList<>();
+        if (entity.getCargos() != null) {
+            for (RoleEntity role : entity.getCargos()) {
+                // Convertendo cada RoleEntity para SimpleGrantedAuthority
+                authorities.add(new SimpleGrantedAuthority(role.getNome()));
+            }
         }
-        return usuario;
+
+        return new UsuarioSistema(
+                entity.getUsername(),
+                entity.getSenha(),
+                authorities
+        );
     }
 }

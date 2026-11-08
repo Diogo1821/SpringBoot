@@ -12,6 +12,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
+
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -24,14 +27,16 @@ import org.springframework.web.bind.annotation.PutMapping;
 
 import jakarta.validation.Valid;
 
+import org.springframework.security.access.prepost.PreAuthorize;
 
 @RestController
+@SecurityRequirement(name = "bearerJwt")
 @RequestMapping("/pessoas")
 public class PessoaController {
 
     private final PessoaService pessoaService;
 
-    private PessoaController (PessoaService pessoaService) {
+    public PessoaController (PessoaService pessoaService) {
         this.pessoaService = pessoaService;
     }
 
@@ -55,6 +60,7 @@ public class PessoaController {
         return optPessoa.get();
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/sem-validacao")
     public ResponseEntity<?> incluirNovo(@RequestBody PessoaDto pessoaDto) {
         pessoaService.incluirNovaPessoa(pessoaDto);
@@ -66,6 +72,7 @@ public class PessoaController {
         return ResponseEntity.created(location).build();
     }
 
+    @PreAuthorize ("hasRole('ADMIN')") // Requer ROLE_ADMIN
     @PostMapping
     public ResponseEntity<?> incluirNovaComValidacao(@RequestBody @Valid PessoaDto pessoaDto) {
 
@@ -81,12 +88,14 @@ public class PessoaController {
         return ResponseEntity.created(location).build();
     }
 
+    @PreAuthorize ("hasRole('ADMIN')") // Requer ROLE_ADMIN
 	@PutMapping("/{username}")
 	public ResponseEntity<?> atualizar(@PathVariable("username") String username, @RequestBody @Valid PessoaAlteracaoDto pessoa) {
 		PessoaDto pessoaDtoAlterada = pessoaService.alterarPessoa(username, pessoa);
 		return ResponseEntity.ok().body(pessoaDtoAlterada);
 	}
 
+    @PreAuthorize ("hasRole('ADMIN')") // Requer ROLE_ADMIN
 	@DeleteMapping({"/{username}"})
 	public ResponseEntity<?> remover(@PathVariable("username") String username) {
 		pessoaService.removerPessoa(username);

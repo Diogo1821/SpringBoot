@@ -1,6 +1,5 @@
 package br.senac.tads.dsw.dados_pessoais;
 
-import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -13,7 +12,6 @@ import br.senac.tads.dsw.dados_pessoais.entidade.ConhecimentoEntity;
 import br.senac.tads.dsw.dados_pessoais.entidade.PessoaEntity;
 import br.senac.tads.dsw.dados_pessoais.repositorio.ConhecimentoRepository;
 import br.senac.tads.dsw.dados_pessoais.repositorio.PessoaRepository;
-import jakarta.annotation.PostConstruct;
 
 // @Primary: quando há mais de uma implementação de PessoaService,
 // o Spring injeta ESTA por padrão (sem precisar alterar o controller)
