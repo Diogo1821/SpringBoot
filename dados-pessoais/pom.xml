@@ -34,6 +34,17 @@
 	</properties>
 
 	<dependencies>
+
+		<!-- OAuth2 Resource Server: inclui a biblioteca Nimbus JOSE+JWT usada pelo JwtService -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-oauth2-resource-server</artifactId>
+		</dependency>
+		<!-- Spring Security: filtros de autenticação e autorização para a API -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-security</artifactId>
+		</dependency>
 		<!-- Spring Data JPA (inclui Hibernate como implementação do JPA) -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
@@ -50,13 +61,11 @@
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-h2console</artifactId>
 		</dependency>
-
 		<dependency>
     		<groupId>com.fasterxml.jackson.core</groupId>
     		<artifactId>jackson-databind</artifactId>
     		<version>2.20.0</version>
 		</dependency>
-
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-webmvc</artifactId>
